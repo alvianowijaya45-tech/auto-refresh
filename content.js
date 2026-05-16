@@ -1,5 +1,5 @@
 let refreshTimer = null;
-let currentInterval = 5000; // Default awal 5 detik
+let currentInterval = 3000; // Default awal 5 detik
 
 function showStatus(message, color) {
     let statusDiv = document.getElementById('extension-status-popup');
