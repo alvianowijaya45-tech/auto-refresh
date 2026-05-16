@@ -7,7 +7,7 @@
       width: 290px; 
       padding: 12px; 
       font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif; 
-      background: #1e222b; /* Mengubah background utama jadi Dark Elegan */
+      background: #1e222b; 
       margin: 0;
     }
     .card { 
@@ -28,7 +28,7 @@
     .logo-img { 
       width: 26px; 
       height: 26px; 
-      border-radius: 50%; /* Membuat logo bulat rapi */
+      border-radius: 50%; 
       border: 2px solid #3498db;
     }
     label { 
@@ -74,7 +74,6 @@
     .btn-stop { background: #e74c3c; }
     .btn-stop:hover { background: #c0392b; transform: translateY(-1px); }
     
-    /* Section Info Statistik */
     .stats-container {
       display: flex;
       justify-content: space-between;
@@ -88,7 +87,6 @@
     .stat-label { font-size: 10px; color: #5c6370; font-weight: bold; }
     .stat-value { font-size: 14px; color: #61afef; font-weight: bold; margin-top: 2px; }
 
-    /* Indikator Status dengan Efek Kedip */
     .status-wrapper {
       display: flex;
       align-items: center;
@@ -116,6 +114,38 @@
     }
     .text-active { color: #2ecc71; }
     .text-inactive { color: #95a5a6; }
+
+    /* --- BAGIAN CSS UNTUK CREDIT FOOTER MALAM --- */
+    .footer-credit {
+      margin-top: 20px;
+      padding-top: 12px;
+      border-top: 1px dashed #3e4451;
+      text-align: center;
+    }
+    .credit-text {
+      font-size: 11px;
+      color: #5c6370;
+      margin-bottom: 8px;
+    }
+    .credit-text strong {
+      color: #e5c07b; /* Warna gold soft untuk nama developer */
+    }
+    .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+    }
+    .social-links a {
+      font-size: 11px;
+      color: #61afef;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+    .social-links a:hover {
+      color: #98c379; /* Hijau soft pas di-hover */
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -126,7 +156,7 @@
     <input type="text" id="webUrl" placeholder="Contoh: advantage-scm">
     
     <label>Interval Refresh (Detik):</label>
-    <input type="number" id="intervalTime" value="3" min="1">
+    <input type="number" id="intervalTime" value="5" min="1">
     
     <button id="toggleBtn" class="btn-start">START</button>
     
@@ -145,6 +175,16 @@
       <div id="statusDot" class="dot"></div>
       <span id="statusLabel" class="text-inactive">Status: Berhenti</span>
     </div>
+
+    <div class="footer-credit">
+      <div class="credit-text">Created by <strong>Alfiano Nanda Dwijaya</strong></div>
+      <div class="social-links">
+        <a href="https://wa.me/6285787443516" target="_blank">💬 WhatsApp</a>
+        <a href="https://github.com/username-kamu" target="_blank">📁 GitHub</a>
+         <a href="https://wa.me/6282298624694" target="_blank">💬 WhatsApp 2</a>
+      </div>
+    </div>
+
   </div>
   <script src="popup.js"></script>
 </body>
