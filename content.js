@@ -1,5 +1,5 @@
 let refreshTimer = null;
-let currentInterval = 1000; // Default awal 10 detik
+let currentInterval = 5000; // Default awal 5 detik
 
 function showStatus(message, color) {
     let statusDiv = document.getElementById('extension-status-popup');
@@ -20,7 +20,9 @@ function showStatus(message, color) {
     setTimeout(() => { statusDiv.style.opacity = '0'; }, 2000);
 }
 
+// Fungsi simulasi klik fisik tingkat tinggi
 function triggerClick(el) {
+    if (!el) return;
     el.click();
     ['mousedown', 'mouseup', 'click'].forEach(eventType => {
         const event = new MouseEvent(eventType, { view: window, bubbles: true, cancelable: true });
@@ -29,18 +31,14 @@ function triggerClick(el) {
 }
 
 function runAutoRefresh() {
-    // Menambahkan 'refreshCount' agar bisa diambil dan diperbarui nilainya
     chrome.storage.local.get(['targetUrl', 'isActive', 'customInterval', 'refreshCount'], (result) => {
-        // Stop timer jika status tidak aktif
         if (!result.isActive) {
             if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
             return;
         }
 
-        // Hitung interval baru dari storage (dalam milidetik)
         const newInterval = (result.customInterval || 5) * 1000;
 
-        // Jika waktu interval berubah dari sebelumnya, buat ulang timer-nya
         if (newInterval !== currentInterval || !refreshTimer) {
             currentInterval = newInterval;
             if (refreshTimer) clearInterval(refreshTimer);
@@ -48,31 +46,87 @@ function runAutoRefresh() {
             refreshTimer = setInterval(() => {
                 const currentUrl = window.location.href;
                 if (result.targetUrl && currentUrl.includes(result.targetUrl)) {
-                    const elements = document.querySelectorAll('a, button, span, div, td');
-                    const refreshBtn = Array.from(elements).find(el => 
-                        el.innerText && el.innerText.trim() === 'Refresh' && el.offsetParent !== null
-                    );
+                    
+                    // 1. Logika mematikan checkbox secara agresif
+                    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                    let checkboxDeactivated = false;
 
-                    if (refreshBtn) {
-                        showStatus(`🔄 Refreshing (Tiap ${result.customInterval}s)...`, "#2980b9");
-                        triggerClick(refreshBtn);
+                    checkboxes.forEach(cb => {
+                        // Cari kontainer pembungkus yang punya teks "Auto Refresh"
+                        let parent = cb.parentElement;
+                        let isAutoRefreshNode = false;
+                        
+                        // Cari ke atas hingga 3 level parent untuk memastikan teks "Auto Refresh" tertangkap
+                        for (let i = 0; i < 3; i++) {
+                            if (parent && parent.innerText && parent.innerText.includes('Auto Refresh')) {
+                                isAutoRefreshNode = true;
+                                break;
+                            }
+                            if (parent) parent = parent.parentElement;
+                        }
 
-                        // LOGIKA BARU: Ambil nilai counter saat ini, tambah 1, lalu simpan kembali
-                        const currentCount = result.refreshCount || 0;
-                        chrome.storage.local.set({ refreshCount: currentCount + 1 });
-                    } else {
-                        showStatus("⚠️ Tombol Ga Ketemu", "#f39c12");
-                    }
+                        if (isAutoRefreshNode) {
+                            // Jika checkbox terdeteksi aktif di sistem DOM
+                            if (cb.checked) {
+                                console.log("Matiin centang via Input...");
+                                triggerClick(cb);
+                                checkboxDeactivated = true;
+                            }
+                            
+                            // Framework ExtJS/KendoUI sering mengunci klik pada elemen induknya.
+                            // Kita tembak juga parent-nya agar perubahan visual & state terjadi serentak.
+                            if (cb.parentElement) {
+                                console.log("Matiin centang via Parent Wrapper...");
+                                triggerClick(cb.parentElement);
+                                checkboxDeactivated = true;
+                            }
+                        }
+                    });
+
+                    // 2. Berikan jeda 400ms agar script web sempat memproses pembukaan lock tombol
+                    setTimeout(() => {
+                        const elements = document.querySelectorAll('a, button, span, div, td');
+                        const refreshBtn = Array.from(elements).find(el => 
+                            el.innerText && el.innerText.trim() === 'Refresh' && el.offsetParent !== null
+                        );
+
+                        if (refreshBtn) {
+                            // Cek apakah tombol memiliki indikasi disabled dari class bawaan framework web
+                            const isStyleDisabled = refreshBtn.className && (
+                                refreshBtn.className.includes('disabled') || 
+                                refreshBtn.className.includes('blur')
+                            );
+
+                            if (refreshBtn.disabled || isStyleDisabled) {
+                                // JIKA MASIH TERKUNCI: Coba paksa klik sekali lagi pada parent checkbox sebagai jalan terakhir
+                                showStatus("🔄 Membuka paksa lock web...", "#e67e22");
+                                checkboxes.forEach(cb => {
+                                    if (cb.parentNode && cb.parentNode.innerText && cb.parentNode.innerText.includes('Auto Refresh')) {
+                                        triggerClick(cb.parentNode);
+                                    }
+                                });
+                                return; 
+                            }
+
+                            // JIKA SUDAH TERBUKA: Jalankan refresh
+                            showStatus(`🔄 Refreshing (Tiap ${result.customInterval}s)...`, "#2980b9");
+                            triggerClick(refreshBtn);
+
+                            const currentCount = result.refreshCount || 0;
+                            chrome.storage.local.set({ refreshCount: currentCount + 1 });
+                        } else {
+                            showStatus("⚠️ Tombol Ga Ketemu", "#f39c12");
+                        }
+                    }, checkboxDeactivated ? 400 : 50); 
+
                 }
             }, currentInterval);
         }
     });
 }
 
-// Cek perubahan status atau interval secara real-time dari storage browser
 chrome.storage.onChanged.addListener(() => {
     runAutoRefresh();
 });
 
-// Jalankan pengecekan otomatis saat halaman pertama kali dimuat
 runAutoRefresh();
